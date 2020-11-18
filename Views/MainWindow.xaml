@@ -1,0 +1,212 @@
+﻿<Window x:Class="LogViewer3.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:prism="http://prismlibrary.com/"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="{Binding Title}" Height="350" Width="525"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        xmlns:helpers="clr-namespace:LogViewer3.Helpers"
+        xmlns:behaviors="clr-namespace:LogViewer3.Behaviors" 
+        xmlns:dragablz="http://dragablz.net/winfx/xaml/dragablz"
+        xmlns:local="clr-namespace:LogViewer3"
+        WindowState="Maximized"
+        Icon="../Logo.ico"
+        ui:TitleBar.IsIconVisible="True"
+        Closing="Window_Closing"
+        
+        ui:WindowHelper.UseModernWindowStyle="True">
+    
+    <Window.Resources>
+        <ResourceDictionary>
+            <dragablz:InterTabController 
+                x:Key="InterTabController" 
+                x:Shared="False" 
+                InterTabClient="{Binding InterTabClient}" 
+                Partition="2AE89D18-F236-4D20-9605-6C03319038E6" />
+
+            <Style TargetType="{x:Type local:TabablzControlEx}" x:Key="TabablzControlStyle">
+                <Setter Property="ItemsSource" Value="{Binding Tabs}" />
+                <Setter Property="SelectedItem" Value="{Binding SelectedTab}"/>
+                <Setter Property="ClosingItemCallback" Value="{Binding ClosingTabItemHandler}" />
+                <Setter Property="ShowDefaultAddButton" Value="{Binding HasTabs}" />
+                <Setter Property="ShowDefaultCloseButton" Value="True" />
+                <Setter Property="AdjacentHeaderItemOffset" Value="-10" />
+                <Setter Property="HeaderMemberPath" Value="Header" />
+                <Setter Property="InterTabController" Value="{StaticResource InterTabController}" />
+                <Setter Property="Margin" Value="0 8 0 0" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Grid x:Name="ctlList">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0"  Height="Auto" Width="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,0" >
+            <MenuItem Header="_File">
+                <MenuItem x:Name="mnuFileOpen" Header="_Open" Command="{Binding ShowFileDialogCommand}" />
+                <MenuItem x:Name="mnuFileExit" Header="_Exit" Click="MenuItem_Click"  />
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Autoload" Command="{Binding ShowAutoLoadConfigurationCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1" Background="{Binding ElementName=cmd_bar,Path=Background}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="47"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <ui:SimpleStackPanel 
+                        Grid.Column="0" 
+                        VerticalAlignment="Center" 
+
+                        Orientation="Horizontal"
+                        Spacing="5">
+
+            </ui:SimpleStackPanel>
+            <ui:CommandBar x:Name="cmd_bar" Grid.Column="1">
+
+            </ui:CommandBar>
+            <StackPanel 
+                Grid.Column="2" 
+                VerticalAlignment="Center" 
+                Orientation="Horizontal">
+                <ui:AutoSuggestBox 
+                    Style="{StaticResource OverrideAutoSuggestBox}" 
+                    PlaceholderText="Search an click [ENTER]" 
+                    QueryIcon="Find" 
+                    Width="400px"  
+                    BorderThickness="0" 
+                    Name="search_box" 
+                    VerticalAlignment="Center" 
+                    Margin="0 0 10 0"
+                    behaviors:CallCommandBehavior.Command="{Binding SelectedTab.SearchCommand}">
+                </ui:AutoSuggestBox>
+            </StackPanel>
+        </Grid>
+
+        <local:TabablzControlEx Grid.Row="2"  Margin="0,0,0,0" x:Name="InitialTabablzControl" Style="{StaticResource TabablzControlStyle}" AddLocationHint="After">
+            <local:TabablzControlEx.InterTabController>
+                <dragablz:InterTabController InterTabClient="{Binding InterTabClient}" Partition="2AE89D18-F236-4D20-9605-6C03319038E6" />
+            </local:TabablzControlEx.InterTabController>
+            <local:TabablzControlEx.HeaderItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+
+                        <Viewbox Grid.Column="0" MaxWidth="{DynamicResource TabViewItemHeaderIconSize}" MaxHeight="{DynamicResource TabViewItemHeaderIconSize}" Margin="{DynamicResource TabViewItemHeaderIconMargin}">
+                            <Label Content="{x:Static helpers:LoggerSymbols.Document}" >
+                                <Label.Style>
+                                    <Style TargetType="Label" BasedOn="{StaticResource DefaultLabelStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=InitialTabablzControl, Path=SelectedItem.Started}" Value="True">
+                                                <Setter Property="Foreground" Value="#E5F7630C"></Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+                            </Label>
+                        </Viewbox>
+                        <TextBlock Text="{Binding .}" Grid.Column="1" VerticalAlignment="Center"></TextBlock>
+                    </Grid>
+                </DataTemplate>
+            </local:TabablzControlEx.HeaderItemTemplate>
+            <local:TabablzControlEx.ContentTemplate>
+                <DataTemplate>
+                    <ListView HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0,0,0,0" ItemsSource="{Binding Lines}" VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Load file on startup" IsCheckable="True" IsChecked="{Binding LoadOnStartup}"></MenuItem>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Width="Auto" x:Name="colLineNum">
+                                    <GridViewColumnHeader>
+                                        Line
+                                        <GridViewColumnHeader.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Ascending" />
+                                                <MenuItem Header="Descending" />
+                                            </ContextMenu>
+                                        </GridViewColumnHeader.ContextMenu>
+                                    </GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding LineNumber}" 
+                                                Style="{StaticResource LogEntryCell}" 
+                                                Foreground="{Binding ForegroundColor, Converter={StaticResource ColorValueConverter}}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                                <GridViewColumn Width="Auto" Header="Data" x:Name="colData">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding Data}" 
+                                                Style="{StaticResource LogEntryCell}"
+                                                Foreground="{Binding ForegroundColor, Converter={StaticResource ColorValueConverter}}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DataTemplate>
+            </local:TabablzControlEx.ContentTemplate>
+        </local:TabablzControlEx>
+        
+        <StatusBar Grid.Row="3" Margin="0,0,0,0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <StatusBarItem HorizontalAlignment="Left">
+                <ui:SimpleStackPanel Spacing="5" Orientation="Horizontal">
+                    <TextBox IsReadOnly="True" BorderThickness="0" Text="{Binding SelectedTab.FilePath}" Background="Transparent" Foreground="{StaticResource SystemControlBackgroundBaseMediumHighBrush}">
+                        
+                    </TextBox>
+
+                    <ProgressBar Height="24" Width="200" Value="{Binding SelectedTab.PercentageLoaded}">
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar" BasedOn="{StaticResource DefaultProgressBarStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab.IsFileLoaded, FallbackValue=True}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding SelectedTab.IsFileLoaded, FallbackValue=True}" Value="True">
+                                        <Setter Property="Visibility" Value="Hidden"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
+                    
+                </ui:SimpleStackPanel>
+                
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock 
+                    Text="Listening for changes..." 
+                    Visibility="{Binding SelectedTab.Started, Converter={StaticResource VisibilityConverter}, FallbackValue=Hidden}" 
+                    Background="#E5F7630C"
+                    Foreground="White"></TextBlock>
+            </StatusBarItem>
+
+            
+            
+        </StatusBar>
+    </Grid>
+</Window>

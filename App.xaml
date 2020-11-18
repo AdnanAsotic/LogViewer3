@@ -1,0 +1,16 @@
+﻿<prism:PrismApplication x:Class="LogViewer3.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	     xmlns:prism="http://prismlibrary.com/"
+            xmlns:ui="http://schemas.modernwpf.com/2019">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemeResources AccentColor="#CA5010"/>
+                <ui:XamlControlsResources />
+                <ResourceDictionary Source="Themes/LogViewerResources.xaml"/>
+                <ResourceDictionary Source="Themes/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</prism:PrismApplication>
